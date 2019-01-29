@@ -55,11 +55,21 @@ module.exports = {
                     }
                     else {
                         jwt.sign({ findUser }, 'secretKey', { expiresIn: 60 * 60 }, (err, token) => {
-                            console.log('token', token)
-                            res.status(200).json({
-                                token: token,
-                                susccss: true
-                            });
+                            jwt.verify(token, 'secretKey', function (err, decoded) {
+                                if (decoded.findUser.status == 'active') {
+                                    res.status(200).json({
+                                        token: token,
+                                        susccss: true
+                                    });
+                                }
+                                else {
+                                    res.status(400).json({
+                                        status: false,
+                                        message: "Contact With The Contact Support"
+                                    });
+                                }
+                            })
+
                         });
                     }
                 }
@@ -75,6 +85,7 @@ module.exports = {
             const bearer = bearerHeader.split(' ');
             const bearerToken = bearer[1];
             req.token = bearerToken;
+            console.log(req.token)
             next();
 
         }
@@ -82,5 +93,18 @@ module.exports = {
             res.sendStatus(403);
         }
     },
+    adminGuard: async (req, res, next) => {
+        const bearerHeader = req.headers['authorization'];
+        if (typeof bearerHeader != 'undefined') {
+            const bearer = bearerHeader.split(' ');
+            const bearerToken = bearer[1];
+            req.token = bearerToken;
+            next();
 
+        }
+        else {
+            res.sendStatus(403);
+        }
+    }
 }
+
